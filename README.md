@@ -10,9 +10,9 @@ bash build-oci.sh
 ```
 
 Import the archive from `artifacts/` into an OCI-capable Proxmox installation.
-Supply the tunnel token at runtime as `/run/secrets/cloudflared-token`, readable
-by UID 65532. Keep credentials and network configuration outside the image
-and repository.
+Set the `TUNNEL_TOKEN` environment variable in the container's runtime settings
+(in Proxmox: **Options → Environment**). No secret mount is required.
+Keep credentials and network configuration outside the image and repository.
 
 Configure private routes, client enrollment and access policies in Cloudflare
 Zero Trust. No services are published by the build script.

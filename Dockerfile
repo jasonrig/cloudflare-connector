@@ -9,10 +9,10 @@ ADD --checksum=sha256:053b80b0a23031a038fdbf3c073f59f82b8f1f152aa67971d7383ffafc
     /usr/local/bin/cloudflared
 
 LABEL org.opencontainers.image.title="Cloudflare connector" \
-      org.opencontainers.image.version="2026.10.3" \
+      org.opencontainers.image.version="2026.10.3-r2" \
       org.opencontainers.image.description="Private-network connector; tunnel credentials supplied at runtime"
 
 USER 65532:65532
 WORKDIR /
 ENTRYPOINT ["/usr/local/bin/cloudflared", "--no-autoupdate"]
-CMD ["tunnel", "--protocol", "quic", "--metrics", "127.0.0.1:2000", "run", "--token-file", "/run/secrets/cloudflared-token"]
+CMD ["tunnel", "--protocol", "quic", "--metrics", "127.0.0.1:2000", "run"]

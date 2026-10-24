@@ -4,7 +4,7 @@ set -euo pipefail
 
 recipe_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 builder_name=${BUILDX_BUILDER:-cloudflare-connector-oci}
-archive_path=${1:-"$recipe_dir/artifacts/cloudflare-connector-2026.10.3-amd64.oci.tar"}
+archive_path=${1:-"$recipe_dir/artifacts/cloudflare-connector-2026.10.3-r2-amd64.oci.tar"}
 
 command -v docker >/dev/null || { echo 'Docker with Buildx is required.' >&2; exit 1; }
 docker info >/dev/null 2>&1 || {
@@ -29,7 +29,7 @@ docker buildx build \
     --platform linux/amd64 \
     --provenance=false \
     --sbom=false \
-    --tag home/cloudflare-connector:2026.10.3 \
+    --tag home/cloudflare-connector:2026.10.3-r2 \
     --output "type=oci,dest=$archive_path" \
     "$recipe_dir"
 
