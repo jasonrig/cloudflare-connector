@@ -1,0 +1,3 @@
+# No local files, credentials or configuration enter the build context.
+*
+!Dockerfile

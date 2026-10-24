@@ -1,0 +1,7 @@
+artifacts/
+.env
+.env.*
+deployment.env
+*.token
+secrets/
+.DS_Store
