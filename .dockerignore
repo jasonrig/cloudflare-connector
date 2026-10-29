@@ -1,3 +1,5 @@
 # No local files, credentials or configuration enter the build context.
 *
 !Dockerfile
+!mesh-init.go
+!collect-runtime.sh

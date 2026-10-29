@@ -1,18 +1,34 @@
 # syntax=docker/dockerfile:1.7
-# Linux/amd64 connector image. Build with build-oci.sh.
-# Base digest follows Cloudflare's own 2026.10.3 Dockerfile.
-FROM gcr.io/distroless/base-debian13:nonroot@sha256:7e22204ffcba783587afba539fcc199cc8c91a7583b66299ac4dccdb5fed5f03
+# Build tools and the vendor's distribution are never included in the final image.
+FROM --platform=$BUILDPLATFORM golang:1.27.2-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS launcher
+ARG TARGETOS
+ARG TARGETARCH
+WORKDIR /src
+COPY mesh-init.go .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -trimpath -ldflags='-s -w -buildid=' -o /mesh-init mesh-init.go
 
-# Immutable release URL and the SHA256 published by Cloudflare for this binary.
-ADD --checksum=sha256:053b80b0a23031a038fdbf3c073f59f82b8f1f152aa67971d7383ffafc0dbab0 --chmod=0555 \
-    https://github.com/cloudflare/cloudflared/releases/download/2026.10.3/cloudflared-linux-amd64 \
-    /usr/local/bin/cloudflared
+# Official Linux/amd64 Cloudflare One Client 2026.8.2115.0, resolved 2026-10-29.
+FROM cloudflare/mesh@sha256:1c135f07ddac619562f45da5816b25d3ac7663a491c2a065bd83c005007dec5e AS vendor
+COPY collect-runtime.sh /collect-runtime.sh
+RUN /bin/sh /collect-runtime.sh
 
-LABEL org.opencontainers.image.title="Cloudflare connector" \
-      org.opencontainers.image.version="2026.10.3-r2" \
-      org.opencontainers.image.description="Private-network connector; tunnel credentials supplied at runtime"
+# No shell, package manager, login utilities, systemd, or distribution rootfs.
+FROM scratch
+COPY --from=vendor /rootfs/ /
+COPY --from=launcher --chmod=0555 /mesh-init /mesh-init
 
-USER 65532:65532
+LABEL org.opencontainers.image.title="Cloudflare Mesh gateway" \
+      org.opencontainers.image.version="2026.8.2115.0-r4" \
+      org.opencontainers.image.description="Distroless dual-stack Mesh gateway; MESH_NODE_TOKEN supplied at runtime"
+
+# Preserve source addresses for bidirectional and future site-to-site routing.
+# The subnet router must provide return routes through this node.
+ENV SRCNAT_ENABLED=false \
+    PATH=/usr/bin \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Root in the container's unprivileged user namespace is required for routing.
+USER 0:0
 WORKDIR /
-ENTRYPOINT ["/usr/local/bin/cloudflared", "--no-autoupdate"]
-CMD ["tunnel", "--protocol", "quic", "--metrics", "127.0.0.1:2000", "run"]
+ENTRYPOINT ["/mesh-init"]
