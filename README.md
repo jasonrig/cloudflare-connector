@@ -2,6 +2,8 @@
 
 A small `cloudflared` image for private-network access through Cloudflare Tunnel.
 The runtime base and connector binary are pinned by checksum.
+The current binary is Cloudflare's `2026.10.7` Linux/amd64 release, verified
+against the published SHA256 checksum.
 
 Build a Linux/amd64 OCI archive with Docker and Buildx:
 
